@@ -8,38 +8,88 @@ To write a python program to perform stop and wait protocol
 4. To send frames to server from the client side.
 5. If your frames reach the server it will send ACK signal to client
 6. Stop the Program
-## PROGRAM:
+## PROGRAM
+```
+import socket
+import threading
+import time
+
+# Server function
+def server():
+    server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    server_socket.bind(('localhost', 12345))
+
+    print("Server is listening on port 12345\n")
+
+    for i in range(5):
+        data, client_address = server_socket.recvfrom(1024)
+
+        print("Server received:", data.decode())
+
+        # Send ACK
+        server_socket.sendto(b"ACK", client_address)
+        print("Server sent: ACK\n")
+
+    server_socket.close()
+
+
+# Client function
+def client(frame_size):
+    time.sleep(1)  # Wait for server to start
+
+    client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    server_address = ('localhost', 12345)
+
+    for i in range(5):
+
+        prefix = f"Frame {i + 1}: "
+
+        if frame_size < len(prefix):
+            print("Frame size must be at least", len(prefix))
+            return
+
+        # Create frame of required size
+        frame = prefix + 'X' * (frame_size - len(prefix))
+
+        print("Client sending:", frame)
+
+        # Send frame
+        client_socket.sendto(frame.encode(), server_address)
+
+        # Wait for ACK
+        ack, _ = client_socket.recvfrom(1024)
+
+        print("Client received:", ack.decode())
+        print("Stop and Wait...\n")
+
+        time.sleep(1)
+
+    client_socket.close()
+
+
+# Main program
+frame_size = int(input("Enter the frame size: "))
+
+# Create server and client threads
+server_thread = threading.Thread(target=server)
+client_thread = threading.Thread(target=client, args=(frame_size,))
+
+# Start both
+server_thread.start()
+client_thread.start()
+
+# Wait for both to finish
+server_thread.join()
+client_thread.join()
+
+print("Transmission completed successfully!")
 
 ```
-CLIENT PROGRAM:
-     import socket 
-    s=socket.socket() 
-s.bind(('localhost',8000)) 
-s.listen(5) 
-c,addr=s.accept() 
-while True: 
-    i=input("Enter a data: ") 
-    c.send(i.encode()) 
-    ack=c.recv(1024).decode() 
-    if ack: 
-        print(ack) 
-        continue 
-    else: 
-        c.close() 
-        break
-```
-```
 
-SERVER PROGRAM:
-      import socket 
-s=socket.socket() 
-s.connect(('localhost',8000)) 
-while True: 
-    print(s.recv(1024).decode()) 
-    s.send("Acknowledgement Recived".encode())
-```    
-## OUTPUT:
-  <img width="1282" height="787" alt="Screenshot 2026-05-18 135249" src="https://github.com/user-attachments/assets/5db95922-e311-46a8-806a-e1bb834b7885" />
+## OUTPUT
+
+<img width="654" height="287" alt="Screenshot 2026-08-21 143841" src="https://github.com/user-attachments/assets/3936ebca-99f0-4058-9a1d-ce190c03db61" />
+
 
 ## RESULT
 Thus, python program to perform stop and wait protocol was successfully executed.
